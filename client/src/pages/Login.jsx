@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link,useLocation } from 'react-router-dom';
 import API, { setAuthToken } from '../api';
 import '../css/Auth.css';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -37,10 +38,13 @@ const Login = ({ onLogin }) => {
         setAuthToken(response.data.token);
         
         onLogin(response.data.token, response.data.user);
-        
-        navigate('/');
-      } else {
-        setError(response.data.message || 'Login failed');
+       const redirectTo = localStorage.getItem('redirectAfterLogin');
+        if (redirectTo) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectTo);
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);

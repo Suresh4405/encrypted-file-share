@@ -1,55 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api';
 import '../css/ShareLink.css';
 
 const ShareLink = () => {
   const { token } = useParams();
+  const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [expiryInfo, setExpiryInfo] = useState('');
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
-  useEffect(() => {
-    const accessShareLink = async () => {
-      try {
-        setLoading(true);
+ useEffect(() => {
+  const accessShareLink = async () => {
+    try {
+      setLoading(true);
+            const userToken = localStorage.getItem('token');
+            const config = userToken ? {
+        headers: {
+          'Authorization': `Bearer ${userToken}`
+        }
+      } : {};
+      
+      const response = await API.get(`/files/share/${token}`, config);
+      
+      if (response.data.success) {
+        setFile(response.data.file);
         
-        const response = await API.get(`/files/share/${token}`);
-        
-        if (response.data.success) {
-          setFile(response.data.file);
-          
-          if (response.data.linkInfo) {
-            if (response.data.linkInfo.isExpired) {
-              setError('This share link has expired');
-            } else if (response.data.linkInfo.remainingTime) {
-              setExpiryInfo(formatRemainingTime(response.data.linkInfo.remainingTime));
-            }
+        if (response.data.linkInfo) {
+          if (response.data.linkInfo.isExpired) {
+            setError('This share link has expired');
+          } else if (response.data.linkInfo.remainingTime) {
+            setExpiryInfo(formatRemainingTime(response.data.linkInfo.remainingTime));
           }
-        } else {
-          setError(response.data.message || 'Failed to access file');
         }
-      } catch (err) {
-        console.error('Share link access error:', err);
-        
-        if (err.response?.status === 404) {
-          setError('File not found or link expired');
-        } else if (err.response?.status === 410) {
-          setError('Share link has expired');
-        } else {
-          setError(err.response?.data?.message || 'Failed to access file');
-        }
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (token) {
-      accessShareLink();
+    } catch (err) {
+      console.error('Share link access error:', err);
+      
+      if (err.response?.status === 401) {
+        setRequiresLogin(true);
+        setError('Please login to access this file');
+      } else if (err.response?.status === 404) {
+        setError('File not found or link expired');
+      } else if (err.response?.status === 410) {
+        setError('Share link has expired');
+      } else {
+        setError(err.response?.data?.message || 'Failed to access file');
+      }
+    } finally {
+      setLoading(false);
     }
-  }, [token]);
+  };
+
+  if (token) {
+    accessShareLink();
+  }
+}, [token]);
 
   const formatRemainingTime = (seconds) => {
     if (!seconds) return 'Unknown';
@@ -74,13 +83,23 @@ const ShareLink = () => {
 
     try {
       setDownloading(true);
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Please login to download');
+        setRequiresLogin(true);
+        return;
+      }
 
-  const response = await fetch(`${API_URL}/api/files/download/${file.id}`, {
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-    }
-  });
+     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const response = await fetch(`${API_URL}/api/files/download/${file.id}`, {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
       
       if (response.ok) {
         const blob = await response.blob();
@@ -104,6 +123,11 @@ const ShareLink = () => {
     }
   };
 
+  const handleLoginRedirect = () => {
+    localStorage.setItem('redirectAfterLogin', `/share/${token}`);
+    navigate('/login');
+  };
+
   if (loading) {
     return (
       <div className="share-link-container">
@@ -125,9 +149,23 @@ const ShareLink = () => {
           </div>
         </div>
 
-        {error ? (
+        {error && !requiresLogin && (
           <div className="alert alert-error">
             <span>{error}</span>
+          </div>
+        )}
+
+        {requiresLogin ? (
+          <div className="login-required">
+            <div className="login-icon">🔒</div>
+            <h3>Authentication Required</h3>
+            <p>You need to login to access this shared file.</p>
+            <button className="btn btn-primary" onClick={handleLoginRedirect}>
+              Login to Access
+            </button>
+            <p className="register-link">
+              Don't have an account? <a href="/register">Register here</a>
+            </p>
           </div>
         ) : file && (
           <>
@@ -142,11 +180,18 @@ const ShareLink = () => {
                 </div>
                 <h3>{file.originalName}</h3>
                 
-             
+                {expiryInfo && (
+                  <div className="expiry-display">
+                    <div className="expiry-alert">
+                      ⏰ Link expires in: {expiryInfo}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="file-details">
                   <div>Type: {file.type}</div>
                   <div>Size: {formatFileSize(file.size)}</div>
+                  <div>Shared by: {file.owner?.name || 'Unknown'}</div>
                   <div>Uploaded: {new Date(file.uploadDate).toLocaleDateString()}</div>
                 </div>
               </div>

@@ -422,6 +422,27 @@ router.get('/share/:token', async (req, res) => {
     console.log('Share link access - Token:', token);
     console.log('Share link access - Auth header:', authHeader ? 'Present' : 'Missing');
 
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Authentication required. Please login to access this file.',
+        requiresAuth: true
+      });
+    }
+
+    const authToken = authHeader.replace('Bearer ', '');
+    let decoded;
+    
+    try {
+      decoded = jwt.verify(authToken, process.env.JWT_SECRET || 'secret123');
+    } catch (authError) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Invalid or expired token. Please login again.',
+        requiresAuth: true
+      });
+    }
+
     const file = await File.findOne({ shareToken: token })
       .populate('owner', 'name email');
     
@@ -431,16 +452,15 @@ router.get('/share/:token', async (req, res) => {
         message: 'File not found or link expired' 
       });
     }
+
     let remainingTime = null;
     let isExpired = false;
     
     if (file.linkExpiry) {
       const now = new Date();
       const expiry = new Date(file.linkExpiry);
-      remainingTime = Math.max(0, Math.floor((expiry - now) / 1000)); 
+      remainingTime = Math.max(0, Math.floor((expiry - now) / 1000));
       isExpired = now > expiry;
-      
-      console.log(`Link expiry check: Now=${now}, Expiry=${expiry}, Remaining=${remainingTime}s, Expired=${isExpired}`);
       
       if (isExpired) {
         return res.status(410).json({ 
@@ -452,34 +472,23 @@ router.get('/share/:token', async (req, res) => {
       }
     }
 
-    let userId = null;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const authToken = authHeader.replace('Bearer ', '');
-        const decoded = jwt.verify(authToken, process.env.JWT_SECRET || 'secret123');
-        userId = decoded.userId;
-        console.log('Share link - Authenticated user:', userId);
-      } catch (authError) {
-        console.log('Share link - Invalid auth token:', authError.message);
+    const userId = decoded.userId;
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+    
+    const hasAccess = 
+      file.owner._id.equals(userObjectId) || 
+      (file.sharedWith && file.sharedWith.some(sharedUserId => 
+        sharedUserId.equals(userObjectId)
+      ));
+    
+    if (!hasAccess) {
+      if (!file.sharedWith) {
+        file.sharedWith = [];
       }
-    }
-    if (userId) {
-      const userObjectId = new mongoose.Types.ObjectId(userId);
-      const hasAccess = 
-        file.owner._id.equals(userObjectId) || 
-        (file.sharedWith && file.sharedWith.some(sharedUserId => 
-          sharedUserId.equals(userObjectId)
-        ));
-      
-      if (!hasAccess) {
-        if (!file.sharedWith) {
-          file.sharedWith = [];
-        }
-        if (!file.sharedWith.some(id => id.equals(userObjectId))) {
-          file.sharedWith.push(userObjectId);
-          await file.save();
-          console.log('Added user to sharedWith:', userId);
-        }
+      if (!file.sharedWith.some(id => id.equals(userObjectId))) {
+        file.sharedWith.push(userObjectId);
+        await file.save();
+        console.log('Added user to sharedWith:', userId);
       }
     }
 
@@ -498,8 +507,7 @@ router.get('/share/:token', async (req, res) => {
         remainingTime: remainingTime,
         isExpired: isExpired
       },
-      requiresAuth: !userId,
-      message: userId ? 'Access granted' : 'Please login to access this file'
+      message: 'Access granted'
     });
   } catch (error) {
     console.error('Share link access error:', error);
