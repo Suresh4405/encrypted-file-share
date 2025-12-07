@@ -21,7 +21,6 @@ const ShareLink = () => {
         if (response.data.success) {
           setFile(response.data.file);
           
-          // Set expiry info
           if (response.data.linkInfo) {
             if (response.data.linkInfo.isExpired) {
               setError('This share link has expired');
@@ -169,7 +168,6 @@ const ShareLink = () => {
   );
 };
 
-// Helper function
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 B';
   const k = 1024;

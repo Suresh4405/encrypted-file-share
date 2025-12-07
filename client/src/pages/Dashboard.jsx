@@ -127,13 +127,9 @@ const Dashboard = ({ onLogout }) => {
       if (response.data.success) {
         const frontendBaseUrl = window.location.origin;
         const shareLink = `${frontendBaseUrl}/share/${response.data.shareToken}`;
-        
-        // Copy to clipboard
-        await navigator.clipboard.writeText(shareLink);
+                await navigator.clipboard.writeText(shareLink);
         setCopySuccess(true);
-        
-        // Reset after 3 seconds
-        setTimeout(() => {
+                setTimeout(() => {
           setCopySuccess(false);
           setLinkDialog(false);
           setSuccess('Share link copied to clipboard!');

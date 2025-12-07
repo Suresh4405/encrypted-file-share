@@ -26,7 +26,6 @@ const Register = () => {
       [name]: value,
     });
 
-    // Check password strength
     if (name === 'password') {
       checkPasswordStrength(value);
     }
@@ -61,8 +60,6 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
-    // Validation
     if (!formData.name || !formData.email || !formData.password) {
       setError('Please fill in all required fields');
       return;
@@ -78,7 +75,6 @@ const Register = () => {
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');

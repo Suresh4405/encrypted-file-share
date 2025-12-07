@@ -24,8 +24,6 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    // Basic validation
     if (!formData.email || !formData.password) {
       setError('Please enter both email and password');
       setLoading(false);
@@ -36,13 +34,10 @@ const Login = ({ onLogin }) => {
       const response = await API.post('/auth/login', formData);
       
       if (response.data.success) {
-        // Set token globally
         setAuthToken(response.data.token);
         
-        // Call parent login handler
         onLogin(response.data.token, response.data.user);
         
-        // Navigate to dashboard
         navigate('/');
       } else {
         setError(response.data.message || 'Login failed');

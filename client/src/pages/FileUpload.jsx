@@ -19,9 +19,7 @@ const FileUpload = () => {
       setError(`Some files exceed 10MB limit: ${invalidFiles.map(f => f.name).join(', ')}`);
       return;
     }
-    
-    // Check file types
-    const allowedTypes = [
+        const allowedTypes = [
       'image/jpeg',
       'image/png',
       'image/gif',

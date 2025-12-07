@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  // set auth on mount
   React.useEffect(() => {
     const s = JSON.parse(localStorage.getItem('auth') || 'null');
     if (s) setAuthToken(s.token);
