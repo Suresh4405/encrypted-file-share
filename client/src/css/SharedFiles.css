@@ -1,0 +1,171 @@
+.shared-files {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.page-header h2 {
+  font-size: 24px;
+  color: var(--black);
+  font-weight: 600;
+}
+
+.btn-secondary {
+  background: var(--gray-light);
+  color: var(--black);
+  border: 1px solid var(--gray);
+}
+
+.btn-secondary:hover {
+  background: var(--gray);
+}
+
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: var(--gray-light);
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--black);
+  border-bottom: 1px solid var(--gray);
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--gray);
+  color: var(--gray-dark);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover {
+  background: var(--gray-light);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-icon {
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+.file-name {
+  color: var(--black);
+  font-weight: 500;
+}
+
+.shared-by {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-icon {
+  font-size: 20px;
+  color: var(--gray-dark);
+}
+
+.user-name {
+  color: var(--black);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.user-email {
+  color: var(--gray-dark);
+  font-size: 12px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.chip-primary {
+  background: #e3f2fd;
+  color: var(--primary-color);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-success {
+  background: var(--success);
+  color: var(--white);
+}
+
+.btn-success:hover {
+  background: #388e3c;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  color: var(--gray);
+}
+
+.empty-state h3 {
+  color: var(--black);
+  margin-bottom: 10px;
+}
+
+.empty-state p {
+  color: var(--gray-dark);
+}
+
+@media (max-width: 768px) {
+  .shared-files {
+    padding: 20px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+  
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .table th,
+  .table td {
+    padding: 12px 8px;
+    white-space: nowrap;
+  }
+}
